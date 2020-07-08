@@ -11,8 +11,11 @@ class ViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
+        
+        let calendarView = CalendarView(frame: NSRect(x: 10, y: 10, width: 400, height: 400))
+        
+        self.view.addSubview(calendarView)
+        
     }
 
     override var representedObject: Any? {
