@@ -9,21 +9,68 @@ import Cocoa
 
 class ViewController: NSViewController {
 
+    var scrollView: NSScrollView?
+    var stackView: NSStackView?
+    
     override func viewDidLoad() {
+        
         super.viewDidLoad()
         
-        let calendarView = CalendarView(frame: NSRect(x: 10, y: 10, width: 400, height: 400))
+        let normalCalendarView = CalendarView(size: .normal)
+        let smallCalendarView = CalendarView(size: .small)
+        let largeCalendarView = CalendarView(size: .large)
         
-        self.view.addSubview(calendarView)
+        self.stackView = NSStackView()
+        
+        if let stackView = self.stackView  {
+            
+     
+        stackView.orientation = .vertical
+            stackView.distribution = .equalCentering
+        stackView.spacing = 10
+
+        stackView.addArrangedSubview(normalCalendarView)
+        stackView.addArrangedSubview(largeCalendarView)
+        stackView.addArrangedSubview(smallCalendarView)
+        
+        self.view.addSubview(stackView)
+        stackViewConstraints()
+        
+        
+        }
+        
+        // self.view.addSubview(normalCalendarView)
+        // self.view.addSubview(smallCalendarView)
+        
         
     }
 
-    override var representedObject: Any? {
-        didSet {
-        // Update the view, if already loaded.
+    func stackViewConstraints() {
+        
+        if let stackView = self.stackView {
+            stackView.translatesAutoresizingMaskIntoConstraints = false
+            
+            stackView.topAnchor.constraint(equalTo: stackView.superview!.topAnchor, constant: 20).isActive = true
+            
+            stackView.bottomAnchor.constraint(equalTo: stackView.superview!.bottomAnchor, constant: -20).isActive = true
+            stackView.leftAnchor.constraint(equalTo: stackView.superview!.leftAnchor, constant: 20).isActive = true
+            stackView.rightAnchor.constraint(equalTo: stackView.superview!.rightAnchor, constant: 20).isActive = true
+   
         }
     }
-
-
+    
+    func scrollViewConstraints() {
+        
+        if let scrollView = self.scrollView {
+            scrollView.translatesAutoresizingMaskIntoConstraints = false
+            
+            scrollView.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 20).isActive = true
+            
+            scrollView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor, constant: 20).isActive = true
+            scrollView.leftAnchor.constraint(equalTo: self.view.leftAnchor, constant: 20).isActive = true
+            scrollView.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: 20).isActive = true
+   
+        }
+    }
 }
 

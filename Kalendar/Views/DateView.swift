@@ -13,6 +13,14 @@ class DateView: NSView {
     var title: String = ""
     var label: NSTextField?
     var isTitle: Bool = false
+    var isOtherMonth: Bool = false
+    
+    var borderColor = NSColor.controlAccentColor
+    var textColor = NSColor.textColor
+    var altTextColor = NSColor.disabledControlTextColor
+    
+    var borderWidth: CGFloat = 0
+    var highlightBorderWidth: CGFloat = 3
     
     required init?(coder: NSCoder) {
         
@@ -26,11 +34,18 @@ class DateView: NSView {
     }
     
  
-    func setDate(date: Int)
+    func setDate(date: Int, isOtherMonth: Bool = false)
     {
         self.date = date
         if let label = self.label {
             label.stringValue = self.date.description
+            
+            if isOtherMonth {
+                label.textColor = altTextColor
+            }
+            else {
+                label.textColor = textColor
+            }
         }
         layoutViews()
         
@@ -49,11 +64,11 @@ class DateView: NSView {
         
         self.date = 0
         self.wantsLayer = true
-        self.layer?.borderWidth = 1
-        self.layer?.borderColor = NSColor.gray.cgColor
+        self.layer?.borderWidth = self.borderWidth
+        self.layer?.borderColor = self.borderColor.cgColor
         
         self.label = NSTextField(labelWithString: "")
-        self.label?.font = NSFont.systemFont(ofSize: 20)
+        self.label?.font = NSFont.systemFont(ofSize: 12)
         self.addSubview(self.label!)
         dateLabelConstraints()
         
@@ -63,28 +78,27 @@ class DateView: NSView {
         
         
         if isTitle {
-            self.date = 0
+        self.date = 0
             self.layer?.backgroundColor = NSColor.lightGray.cgColor
             
         }
         else {
-         
             
-       
             let trackingArea = NSTrackingArea(rect: self.bounds, options: [NSTrackingArea.Options.mouseEnteredAndExited, NSTrackingArea.Options.activeAlways], owner: self, userInfo: nil)
             
             self.addTrackingArea(trackingArea)
         
         }
+        
+      
        
     }
     override func mouseEntered(with event: NSEvent) {
-        self.layer?.borderWidth = 3
-        self.layer?.backgroundColor = NSColor.red.cgColor
+        self.layer?.borderWidth = self.highlightBorderWidth
+        
     }
     override func mouseExited(with event: NSEvent) {
-        self.layer?.borderWidth = 1
-        self.layer?.backgroundColor = NSColor.clear.cgColor
+        self.layer?.borderWidth = self.borderWidth
     
     }
     
