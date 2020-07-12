@@ -14,6 +14,8 @@ class DateView: NSView {
     var label: NSTextField?
     var isTitle: Bool = false
     var isOtherMonth: Bool = false
+  
+    var fontSize: CGFloat = 5
     
     var borderColor = NSColor.controlAccentColor
     var textColor = NSColor.textColor
@@ -33,6 +35,20 @@ class DateView: NSView {
         commonInit()
     }
     
+    convenience init(frame frameRect: NSRect, size: Size ) {
+        
+        self.init(frame: frameRect)
+    
+        switch size {
+        case .small:
+            self.fontSize = 9
+        case .normal:
+            self.fontSize = 12
+        case .large:
+            self.fontSize = 14
+       
+        }
+    }
  
     func setDate(date: Int, isOtherMonth: Bool = false)
     {
@@ -66,30 +82,38 @@ class DateView: NSView {
         self.wantsLayer = true
         self.layer?.borderWidth = self.borderWidth
         self.layer?.borderColor = self.borderColor.cgColor
-        
+       
         self.label = NSTextField(labelWithString: "")
-        self.label?.font = NSFont.systemFont(ofSize: 12)
+        
         self.addSubview(self.label!)
-        dateLabelConstraints()
+        
+        
         
     }
     
     func layoutViews() {
         
+        if let label = self.label {
+         
+            label.font = NSFont.systemFont(ofSize: self.fontSize)
+            dateLabelConstraints()
+        }
         
         if isTitle {
-        self.date = 0
-            self.layer?.backgroundColor = NSColor.lightGray.cgColor
+            self.date = 0
+                self.layer?.backgroundColor = NSColor.lightGray.cgColor
             
         }
         else {
             
+            self.layer?.cornerRadius = 5
             let trackingArea = NSTrackingArea(rect: self.bounds, options: [NSTrackingArea.Options.mouseEnteredAndExited, NSTrackingArea.Options.activeAlways], owner: self, userInfo: nil)
             
             self.addTrackingArea(trackingArea)
         
         }
         
+        self.toolTip = self.date.description
       
        
     }
@@ -105,6 +129,7 @@ class DateView: NSView {
     func dateLabelConstraints() {
         
         if let label = self.label {
+            
             label.translatesAutoresizingMaskIntoConstraints = false
             
             label.centerYAnchor.constraint(equalTo: self.centerYAnchor, constant: 0).isActive = true
