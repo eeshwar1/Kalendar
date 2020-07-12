@@ -1,8 +1,8 @@
 //
-//  VButton.swift
-//  CustomControls
+//  VUButton.swift
+//  Kalendar
 //
-//  Created by Venky Venkatakrishnan on 8/6/18.
+//  Created by Venky Venkatakrishnan on 7/11/20.
 //  Copyright © 2018 Venky UL. All rights reserved.
 //
 
@@ -10,7 +10,7 @@ import Cocoa
 
 @IBDesignable
 
-class VButton: NSButton {
+class VUButton: NSButton {
     
     enum ButtonType {
         case circle
@@ -21,7 +21,7 @@ class VButton: NSButton {
        
     }
     
-    @IBInspectable var backColor: NSColor = NSColor.black
+    @IBInspectable var backColor: NSColor = NSColor.darkGray
     
     var buttonType: ButtonType = .circle
     
@@ -48,7 +48,7 @@ class VButton: NSButton {
         setPath()
     }
     
-    convenience init(buttonType: ButtonType, size: Size) {
+    convenience init(buttonType: ButtonType, size: Size, toolTip: String = "") {
         
         var width = 0
         var height = 0
@@ -69,7 +69,12 @@ class VButton: NSButton {
         self.buttonType = buttonType
         self.size = size
         
+        if toolTip != "" {
+            self.setTooltip(toolTip: toolTip)
+        }
+        
     }
+    
     
     override var intrinsicContentSize: NSSize {
         return NSSize(width: self.bounds.width, height: self.bounds.height)
@@ -81,11 +86,11 @@ class VButton: NSButton {
         
         switch self.size {
         case .small:
-            lineWidth = 1
+            lineWidth = 0.5
         case .normal:
-            lineWidth = 2
+            lineWidth = 1
         case .large:
-            lineWidth = 3
+            lineWidth = 2
         
         }
         
@@ -118,12 +123,12 @@ class VButton: NSButton {
            self.buttonPath = NSBezierPath()
                            
            self.buttonPath.move(to: NSPoint(x: shapeBounds.minX,y: shapeBounds.minY))
-           self.buttonPath.line(to: NSPoint(x: shapeBounds.minX + shapeBounds.width * 0.6, y: shapeBounds.minY + shapeBounds.height/2))
+           self.buttonPath.line(to: NSPoint(x: shapeBounds.minX + shapeBounds.width * 0.5, y: shapeBounds.minY + shapeBounds.height/2))
            self.buttonPath.line(to: NSPoint(x: shapeBounds.minX, y: shapeBounds.maxY))
                               
            let secondArrow = NSBezierPath()
            secondArrow.move(to: NSPoint(x: shapeBounds.minX + shapeBounds.width * 0.4, y: shapeBounds.minY))
-           secondArrow.line(to: NSPoint(x: shapeBounds.minX + shapeBounds.width, y: shapeBounds.minY + shapeBounds.height/2))
+           secondArrow.line(to: NSPoint(x: shapeBounds.minX + shapeBounds.width - lineWidth, y: shapeBounds.minY + shapeBounds.height/2))
            secondArrow.line(to: NSPoint(x: shapeBounds.minX + shapeBounds.width * 0.4, y: shapeBounds.maxY))
         
            self.buttonPath.append(secondArrow)
@@ -133,12 +138,12 @@ class VButton: NSButton {
             
            self.buttonPath = NSBezierPath()
            self.buttonPath.move(to: NSPoint(x: shapeBounds.maxX,y: shapeBounds.minY))
-           self.buttonPath.line(to: NSPoint(x: shapeBounds.minX + shapeBounds.width * 0.4, y: shapeBounds.minY + shapeBounds.height/2))
+           self.buttonPath.line(to: NSPoint(x: shapeBounds.minX + shapeBounds.width * 0.5, y: shapeBounds.minY + shapeBounds.height/2))
            self.buttonPath.line(to: NSPoint(x: shapeBounds.maxX, y: shapeBounds.maxY))
                             
            let secondArrow = NSBezierPath()
            secondArrow.move(to: NSPoint(x: shapeBounds.minX + shapeBounds.width * 0.6, y: shapeBounds.minY))
-           secondArrow.line(to: NSPoint(x: shapeBounds.minX, y: shapeBounds.minY +  shapeBounds.height/2))
+           secondArrow.line(to: NSPoint(x: shapeBounds.minX + lineWidth, y: shapeBounds.minY +  shapeBounds.height/2))
            secondArrow.line(to: NSPoint(x: shapeBounds.minX + shapeBounds.width * 0.6, y: shapeBounds.maxY))
                                
            self.buttonPath.append(secondArrow)
@@ -147,7 +152,6 @@ class VButton: NSButton {
         }
         
     }
-    
     override func draw(_ dirtyRect: NSRect) {
     
         setPath()
@@ -171,6 +175,12 @@ class VButton: NSButton {
         }
         
         
+    }
+    
+    // MARK: - Bells and Whistles
+    
+    func setTooltip(toolTip: String) {
+        self.toolTip = toolTip
     }
     
 

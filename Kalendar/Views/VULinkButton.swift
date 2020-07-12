@@ -1,14 +1,14 @@
 //
-//  VLinkButton.swift
-//  Temporal
+//  VULinkButton.swift
+//  Kalendar
 //
-//  Created by Venky Venkatakrishnan on 4/7/20.
+//  Created by Venky Venkatakrishnan on 7/12/20.
 //  Copyright © 2020 Venky UL. All rights reserved.
 //
 
 import Cocoa
 
-@IBDesignable class VLinkButton : NSButton
+@IBDesignable class VULinkButton : NSButton
 {
     @IBInspectable var link: String = ""
     var url: URL?

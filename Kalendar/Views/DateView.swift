@@ -14,6 +14,11 @@ class DateView: NSView {
     var label: NSTextField?
     var isTitle: Bool = false
     var isOtherMonth: Bool = false
+    var isToday: Bool = false {
+        didSet {
+            layoutViews()
+        }
+    }
   
     var fontSize: CGFloat = 5
     
@@ -99,6 +104,11 @@ class DateView: NSView {
             dateLabelConstraints()
         }
         
+        if isToday {
+            self.layer?.borderColor = NSColor.red.cgColor
+            self.layer?.borderWidth = highlightBorderWidth
+        }
+        
         if isTitle {
             self.date = 0
                 self.layer?.backgroundColor = NSColor.lightGray.cgColor
@@ -122,8 +132,10 @@ class DateView: NSView {
         
     }
     override func mouseExited(with event: NSEvent) {
-        self.layer?.borderWidth = self.borderWidth
-    
+        
+        if !isToday {
+            self.layer?.borderWidth = self.borderWidth
+        }
     }
     
     func dateLabelConstraints() {

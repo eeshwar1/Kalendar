@@ -33,9 +33,22 @@ class CalendarView: NSView {
     var titleStackHeight: CGFloat = 30
     var titleStackWidth: CGFloat = 100
     
-    var month: CalendarMonth?
+    var titleBuffer: CGFloat = 20
     
-    var stackView: NSStackView?
+    var calendarMonth: CalendarMonth = CalendarMonth()
+    
+    var todayDay: Int = 0
+    var todayMonth: Int = 0
+    var todayYear: Int = 0
+    
+    var displayMonth: Int = 0
+    var displayYear: Int = 0
+    
+    var datesArea: NSView = NSView()
+    
+    var stackView: NSStackView = NSStackView()
+    
+    let monthLabel = NSTextField(labelWithString: "")
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -75,6 +88,8 @@ class CalendarView: NSView {
         height = width + offset
         self.init(frame: NSRect(origin: CGPoint.zero, size: CGSize(width: width, height: height)))
         self.size = size
+        
+       
        
     }
     
@@ -88,48 +103,58 @@ class CalendarView: NSView {
         self.layer?.borderColor = NSColor.gray.cgColor
         self.layer?.borderWidth = 3
         self.layer?.cornerRadius = 5
-        self.month = CalendarMonth(month: 08, year: 2020)
+        
         
         setConstraints()
         
+        setupCalendar()
+        setupTitleArea()
         
-       
+        datesArea.frame =
+        CGRect(origin: CGPoint(x: 0,y: 0), size: CGSize(width: self.bounds.width, height: self.bounds.height - titleAreaHeight - titleBuffer))
+        stackView.addArrangedSubview(datesArea)
+    
     }
-
+    
     override func viewWillDraw() {
         
-        self.stackView = NSStackView()
+        displayCalendar()
         
-        setupTitleArea()
-        setupDateViews()
     }
         
     func setupTitleArea() {
         
         switch size {
-        case .small:
-            fontSize = 9
-            buttonStackWidth = 30
-            buttonStackHeight = 12
-            titleStackHeight = 12
-        case .normal:
-            fontSize = 11
-            buttonStackWidth = 40
-            buttonStackHeight = 14
-            titleStackHeight = 14
-        case .large:
-            fontSize = 14
-            buttonStackWidth = 50
-            buttonStackHeight = 20
-            titleStackHeight = 20
+            case .small:
+                fontSize = 9
+                buttonStackWidth = 50
+                buttonStackHeight = 12
+                titleStackHeight = 12
+                titleBuffer = 12
+            case .normal:
+                fontSize = 11
+                buttonStackWidth = 60
+                buttonStackHeight = 14
+                titleStackHeight = 20
+                titleBuffer = 20
+            case .large:
+                fontSize = 14
+                buttonStackWidth = 60
+                buttonStackHeight = 20
+                titleStackHeight = 25
+                titleBuffer = 20
         }
-        
-        let monthLabel =  NSTextField(labelWithString: "August 2020")
-        monthLabel.font = NSFont.systemFont(ofSize: self.fontSize)
+
     
-        let buttonNextMonth = VButton(buttonType: .forwardArrow, size: self.size)
-        let buttonPrevMonth = VButton(buttonType: .backwardArrow, size: self.size)
-        let buttonToday = VButton(buttonType: .circle, size: self.size)
+        let buttonNextMonth = VUButton(buttonType: .forwardArrow, size: self.size, toolTip: "Next Month")
+        let buttonPrevMonth = VUButton(buttonType: .backwardArrow, size: self.size, toolTip: "Previous Month")
+        let buttonToday = VUButton(buttonType: .circle, size: self.size, toolTip: "Today")
+        let buttonNextYear = VUButton(buttonType: .forwardDoubleArrow, size: self.size, toolTip: "Next Year")
+        let buttonPrevYear = VUButton(buttonType: .backwardDoubleArrow, size: self.size, toolTip: "Prev Year")
+        
+        
+        buttonPrevYear.target = self
+        buttonPrevYear.action = #selector(showPrevYear)
         
         buttonPrevMonth.target = self
         buttonPrevMonth.action = #selector(showPrevMonth)
@@ -139,6 +164,10 @@ class CalendarView: NSView {
         
         buttonNextMonth.target = self
         buttonNextMonth.action = #selector(showNextMonth)
+        
+        
+        buttonNextYear.target = self
+        buttonNextYear.action = #selector(showNextYear)
         
         let titleStack = NSStackView()
         titleStack.orientation = .horizontal
@@ -154,9 +183,12 @@ class CalendarView: NSView {
         buttonStack.distribution = .equalSpacing
         buttonStack.spacing = 1
   
+        
+        buttonStack.addArrangedSubview(buttonPrevYear)
         buttonStack.addArrangedSubview(buttonPrevMonth)
         buttonStack.addArrangedSubview(buttonToday)
         buttonStack.addArrangedSubview(buttonNextMonth)
+        buttonStack.addArrangedSubview(buttonNextYear)
         
         titleStack.addArrangedSubview(buttonStack)
         
@@ -164,48 +196,51 @@ class CalendarView: NSView {
         buttonStack.widthAnchor.constraint(lessThanOrEqualToConstant: buttonStackWidth).isActive = true
         buttonStack.trailingAnchor.constraint(equalTo: buttonStack.superview!.trailingAnchor, constant: 0).isActive = true
     
-        if let stackView = self.stackView {
-            
-            stackView.orientation = .vertical
-            stackView.distribution = .equalSpacing
-            stackView.alignment = .centerX
-            stackView.spacing = 5
-            
-            self.addSubview(stackView)
-            stackViewConstraints()
-            
-            stackView.addArrangedSubview(titleStack)
-            
-            titleStack.translatesAutoresizingMaskIntoConstraints = false
-            titleStack.heightAnchor.constraint(equalToConstant: titleStackHeight).isActive = true
-            titleStack.widthAnchor.constraint(greaterThanOrEqualToConstant: titleStackWidth).isActive = true
-            
-            titleStack.topAnchor.constraint(equalTo: titleStack.superview!.topAnchor, constant: 2).isActive = true
+        stackView.orientation = .vertical
+        stackView.distribution = .equalSpacing
+        stackView.alignment = .centerX
+        stackView.spacing = 5
         
-            titleStack.leftAnchor.constraint(equalTo: titleStack.superview!.leftAnchor, constant: 5).isActive = true
-            
-            
+        self.addSubview(stackView)
+        stackViewConstraints()
+        
+        stackView.addArrangedSubview(titleStack)
+        
+        titleStack.translatesAutoresizingMaskIntoConstraints = false
+        titleStack.heightAnchor.constraint(equalToConstant: titleStackHeight).isActive = true
+        titleStack.widthAnchor.constraint(greaterThanOrEqualToConstant: titleStackWidth).isActive = true
+        
+        titleStack.topAnchor.constraint(equalTo: titleStack.superview!.topAnchor, constant: 2).isActive = true
+    
+        titleStack.leftAnchor.constraint(equalTo: titleStack.superview!.leftAnchor, constant: 5).isActive = true
+        
+        titleStack.rightAnchor.constraint(equalTo: titleStack.superview!.rightAnchor, constant: -10).isActive = true
+          
+        
+    }
+    
+    func displayCalendar()
+    {
+        
+        self.setToday()
+        
+        self.calendarMonth.setMonthAndYear(month: self.displayMonth,year: self.displayYear)
+    
+        self.monthLabel.stringValue = self.calendarMonth.monthAndYear
 
-        }
+        setupDateViews()
+        
     }
     
     func setupDateViews() {
-        
-        guard let month = self.month, let stackView = self.stackView else {
-        
-            return
-        }
-        
-        let datesArea = NSView(frame: CGRect(origin: CGPoint(x: 0,y: titleAreaHeight), size: CGSize(width: self.bounds.width, height: self.bounds.height - titleAreaHeight)))
-       
-        stackView.addArrangedSubview(datesArea)
-       
+    
+        datesArea.subviews.removeAll()
         let datesBounds = datesArea.bounds
         
         // dates area constraints
         cellWidth = Int(datesBounds.width/7)
         cellHeight = Int(datesBounds.height/7)
-        cellSpacing = Int(datesBounds.height/50)
+        cellSpacing = Int(datesBounds.height/70)
         
         // title row
         var row = 0
@@ -223,15 +258,15 @@ class CalendarView: NSView {
         }
         
         var prevMonthIndex = 0
-        let prevMonthDatesLastIndex = month.prevMonthDates.count - 1
+        let prevMonthDatesLastIndex = calendarMonth.prevMonthDates.count - 1
         var prevMonthDateIndex = 0
         
-        for _ in (0..<month.firstDayOfMonthWeekDay - 1)
+        for _ in (0..<calendarMonth.firstDayOfMonthWeekDay - 1)
         {
             let dateView = DateView(frame: NSRect(x: Int(datesBounds.minX) + col * cellWidth, y: Int(datesBounds.maxY) - (cellHeight + cellSpacing + row * cellHeight), width: cellWidth, height: cellHeight), size: self.size)
             
-            prevMonthDateIndex = prevMonthDatesLastIndex - (month.firstDayOfMonthWeekDay -  prevMonthIndex - 2)
-            dateView.setDate(date: month.prevMonthDates[prevMonthDateIndex], isOtherMonth: true)
+            prevMonthDateIndex = prevMonthDatesLastIndex - (calendarMonth.firstDayOfMonthWeekDay -  prevMonthIndex - 2)
+            dateView.setDate(date: calendarMonth.prevMonthDates[prevMonthDateIndex], isOtherMonth: true)
             dateView.isOtherMonth = true
             datesArea.addSubview(dateView)
             
@@ -239,11 +274,17 @@ class CalendarView: NSView {
             prevMonthIndex = prevMonthIndex + 1
         }
       
-        for date in month.dates {
+        for date in calendarMonth.dates {
             
             let dateView = DateView(frame: NSRect(x: Int(datesBounds.minX) + col * cellWidth, y: Int(datesBounds.maxY) - (cellHeight + cellSpacing + row * cellHeight), width: cellWidth, height: cellHeight), size: self.size)
             
             dateView.setDate(date: date)
+            
+            if date == self.todayDay &&
+                displayMonth == self.todayMonth &&
+                displayYear == self.todayYear {
+                dateView.isToday = true
+            }
             datesArea.addSubview(dateView)
             col = col + 1
             if col >= 7 {
@@ -257,7 +298,7 @@ class CalendarView: NSView {
             
             let dateView = DateView(frame: NSRect(x: Int(datesBounds.minX) + col * cellWidth, y: Int(datesBounds.maxY) - (cellHeight + cellSpacing + row * cellHeight), width: cellWidth, height: cellHeight), size: self.size)
             
-            dateView.setDate(date: month.nextMonthDates[nextMonthIndex], isOtherMonth: true)
+            dateView.setDate(date: calendarMonth.nextMonthDates[nextMonthIndex], isOtherMonth: true)
             dateView.isOtherMonth = true
             datesArea.addSubview(dateView)
             col = col + 1
@@ -272,37 +313,164 @@ class CalendarView: NSView {
     }
     
     func stackViewConstraints() {
+    
+            
+        stackView.translatesAutoresizingMaskIntoConstraints = false
         
-        if let stackView = self.stackView {
-            
-            stackView.translatesAutoresizingMaskIntoConstraints = false
-            
-            stackView.topAnchor.constraint(equalTo: stackView.superview!.topAnchor, constant: 1).isActive = true
-            
-            stackView.bottomAnchor.constraint(equalTo: stackView.superview!.bottomAnchor, constant: -1).isActive = true
-            stackView.leftAnchor.constraint(equalTo: stackView.superview!.leftAnchor, constant: 2).isActive = true
-            stackView.rightAnchor.constraint(equalTo: stackView.superview!.rightAnchor, constant: 2).isActive = true
+        stackView.topAnchor.constraint(equalTo: stackView.superview!.topAnchor, constant: 1).isActive = true
+        
+        stackView.bottomAnchor.constraint(equalTo: stackView.superview!.bottomAnchor, constant: -1).isActive = true
+        stackView.leftAnchor.constraint(equalTo: stackView.superview!.leftAnchor, constant: 2).isActive = true
+        stackView.rightAnchor.constraint(equalTo: stackView.superview!.rightAnchor, constant: 2).isActive = true
    
-        }
+    
     }
  
     // MARK:-  Actions
     
     @IBAction func showNextMonth(sender: NSButton) {
         
-        print("Next Month")
+        var dateComponents = DateComponents()
+        dateComponents.month = self.calendarMonth.month
+        dateComponents.year = self.calendarMonth.year
+        dateComponents.day  = 1
+        
+        let calendar = Calendar.current
+        
+        let date = calendar.date(from: dateComponents)!
+        
+        dateComponents.month = 1
+        dateComponents.day = 0
+        dateComponents.year = 0
+        
+        let nextMonthDate = calendar.date(byAdding: dateComponents, to: date)!
+        
+        let nextMonthDateMonth = calendar.component(.month, from: nextMonthDate)
+        let nextMonthDateYear = calendar.component(.year, from: nextMonthDate)
+        
+        self.displayMonth = nextMonthDateMonth
+        self.displayYear = nextMonthDateYear
+        
+        self.displayCalendar()
         
     }
     
     @IBAction func showPrevMonth(sender: NSButton) {
         
-        print("Previous Month")
+        var dateComponents = DateComponents()
+        dateComponents.month = self.calendarMonth.month
+        dateComponents.year = self.calendarMonth.year
+        dateComponents.day  = 1
         
+        let calendar = Calendar.current
+        
+        let date = calendar.date(from: dateComponents)!
+        
+        dateComponents.month = -1
+        dateComponents.day = 0
+        dateComponents.year = 0
+        
+        let prevMonthDate = calendar.date(byAdding: dateComponents, to: date)!
+        
+        let prevMonthDateMonth = calendar.component(.month, from: prevMonthDate)
+        let prevMonthDateYear = calendar.component(.year, from: prevMonthDate)
+        
+        self.displayMonth = prevMonthDateMonth
+        self.displayYear = prevMonthDateYear
+        
+        self.displayCalendar()
+        
+    }
+    
+    @IBAction func showPrevYear(sender: NSButton) {
+        
+        var dateComponents = DateComponents()
+        dateComponents.month = self.calendarMonth.month
+        dateComponents.year = self.calendarMonth.year
+        dateComponents.day  = 1
+        
+        let calendar = Calendar.current
+        
+        let date = calendar.date(from: dateComponents)!
+        
+        dateComponents.month = 0
+        dateComponents.day = 0
+        dateComponents.year = -1
+        
+        let prevYearDate = calendar.date(byAdding: dateComponents, to: date)!
+        
+        let prevYearDateMonth = calendar.component(.month, from: prevYearDate)
+        let prevYearDateYear = calendar.component(.year, from: prevYearDate)
+        
+        self.displayMonth = prevYearDateMonth
+        self.displayYear = prevYearDateYear
+        
+        self.displayCalendar()
+    }
+    
+    @IBAction func showNextYear(sender: NSButton) {
+        
+        var dateComponents = DateComponents()
+        dateComponents.month = self.calendarMonth.month
+        dateComponents.year = self.calendarMonth.year
+        dateComponents.day  = 1
+        
+        let calendar = Calendar.current
+        
+        let date = calendar.date(from: dateComponents)!
+        
+        dateComponents.month = 0
+        dateComponents.day = 0
+        dateComponents.year = 1
+        
+        let nextYearDate = calendar.date(byAdding: dateComponents, to: date)!
+        
+        let nextYearDateMonth = calendar.component(.month,
+                                                   from: nextYearDate)
+        let nextYearDateYear = calendar.component(.year,
+                                                  from: nextYearDate)
+        
+        self.displayMonth = nextYearDateMonth
+        self.displayYear = nextYearDateYear
+        
+        self.displayCalendar()
     }
     @IBAction func showToday(sender: NSButton) {
         
-        print("Show Today")
+        self.displayMonth = self.todayMonth
+        self.displayYear = self.todayYear
+        
+        self.displayCalendar()
         
     }
+    
+    // MARK: - Calendar Functions
+    
+    func setupCalendar() {
+        
+        setToday()
+        
+        self.displayYear = self.todayYear
+        self.displayMonth = self.todayMonth
+        
+        self.calendarMonth.setMonthAndYear(month: self.displayMonth,year: self.displayYear)
+    }
+    
+    func setToday()
+    {
+        
+         let today = Date()
+         let calendar = Calendar.current
+        
+         let todayMonth = calendar.component(.month, from: today)
+         let todayYear =  calendar.component(.year, from: today)
+         let todayDay =  calendar.component(.day, from: today)
+         
+         self.todayMonth = todayMonth
+         self.todayYear = todayYear
+         self.todayDay = todayDay
+         
+    }
+    
     
 }
